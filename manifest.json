@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Canvas Styler for BYU-Idaho",
+  "version": "1.1.1",
+  "description": "Restyle byui.instructure.com: colors, fonts, borders, shadows, custom CSS, custom dashboard course card images, nav icon color, and a custom logo.",
+  "permissions": ["storage", "scripting", "activeTab"],
+  "host_permissions": ["https://byui.instructure.com/*"],
+  "action": {
+    "default_title": "Canvas Styler",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://byui.instructure.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
