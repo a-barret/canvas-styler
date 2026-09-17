@@ -53,6 +53,7 @@
     ".ic-app-header__menu-list-link",
     ".ic-app-header__menu-list-link .ic-icon-svg",
     ".ic-app-header__menu-list-link .ic-icon-svg *",
+    ".ic-app-header__menu-list-link .menu-item__text",
     "#global_nav_tray_container .ic-icon-svg",
   ].join(",\n");
 
@@ -76,6 +77,7 @@
   const NAV_ACTIVE_ICON_SELECTOR = [
     "#header .ic-app-header__menu-list-item--active .ic-icon-svg",
     "#header .ic-app-header__menu-list-item--active .ic-icon-svg *",
+    "#header .ic-app-header__menu-list-item--active .menu-item__text",
   ].join(",\n");
 
   const LOGO_SELECTOR = [
