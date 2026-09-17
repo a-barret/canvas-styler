@@ -47,6 +47,20 @@ Click the extension's icon to open the popup. It has three tabs:
   .ic-DashboardCard__header-title { text-transform: uppercase; }
   ```
 
+## Backup: save/load settings as a file
+
+At the bottom of the **Style** tab:
+
+- **Export settings…** — downloads everything (colors, fonts, card styles,
+  custom CSS, custom logo, and per-course card images) as a single `.json`
+  file to your computer's normal downloads location (works the same on
+  Windows and Mac).
+- **Import settings…** — pick a previously exported `.json` file to restore
+  it. This replaces your current settings after a confirmation prompt.
+
+This is handy for backing things up before experimenting, or copying your
+setup to another computer/profile.
+
 ## What's new in this version
 
 - **Nav bar icon color** — recolor the sidebar icons independently of the

@@ -74,7 +74,7 @@
   ].join(",\n");
 
   const CARD_OUTER_SELECTOR = ".ic-DashboardCard";
-  const CARD_BOX_SELECTOR = ".ic-DashboardCard__box, .ic-DashboardCard";
+  const CARD_BOX_SELECTOR = ".ic-DashboardCard";
 
   function withHead(cb) {
     if (document.head) {

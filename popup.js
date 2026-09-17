@@ -342,6 +342,74 @@ $("refreshCourses").addEventListener("click", () => {
   });
 });
 
+/* ---------------- Backup: export / import ---------------- */
+$("exportBtn").addEventListener("click", () => {
+  const payload = {
+    csxBackup: true,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settings,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `canvas-styler-settings-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Give the browser a moment to pick up the blob before revoking it.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("importFileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try {
+      parsed = JSON.parse(reader.result);
+    } catch (err) {
+      alert("That file isn't valid JSON — couldn't import it.");
+      e.target.value = "";
+      return;
+    }
+
+    // Accept either a wrapped backup ({ csxBackup: true, settings: {...} })
+    // or a raw settings object exported some other way.
+    const incoming = parsed && parsed.csxBackup ? parsed.settings : parsed;
+
+    if (!incoming || typeof incoming !== "object") {
+      alert("That file doesn't look like a Canvas Styler settings export.");
+      e.target.value = "";
+      return;
+    }
+
+    if (!confirm("Import these settings? This will replace your current styles, custom CSS, logo, and course card images.")) {
+      e.target.value = "";
+      return;
+    }
+
+    settings = Object.assign(structuredClone(DEFAULTS), incoming);
+    settings.vars = incoming.vars || {};
+    settings.courseImages = incoming.courseImages || {};
+    settings.customLogo = incoming.customLogo || "";
+    settings.customCSS = incoming.customCSS || "";
+    settings.enabled = incoming.enabled !== false;
+
+    save();
+    hydrateUI();
+    // Course card thumbnails need a live dashboard tab to re-render names,
+    // so just clear the list rather than showing stale entries.
+    $("coursesList").innerHTML = `<div class="empty">Settings imported. Click "Refresh course list" to see your courses again.</div>`;
+
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
+
 /* ---------------- Init ---------------- */
 chrome.storage.local.get([STORAGE_KEY], (result) => {
   settings = Object.assign(structuredClone(DEFAULTS), result[STORAGE_KEY] || {});
