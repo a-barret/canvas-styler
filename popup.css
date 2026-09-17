@@ -219,3 +219,59 @@ textarea#customCSS {
   margin: 0;
 }
 #importFileInput { display: none; }
+
+/* Onboarding (pick a Canvas site) */
+#onboarding {
+  width: 320px;
+  padding: 24px 18px;
+}
+#onboarding .onboarding-inner .brand {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+#onboarding .brand img { width: 20px; height: 20px; }
+#onboarding .hint { margin: 0 0 10px; }
+#onboarding .hint.small { font-size: 11px; color: #8b949e; }
+#onboarding .hint.error { color: #d1242f; }
+#onboarding input[type="text"] {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+#onboarding button {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #0969da;
+  background: #0969da;
+  color: #fff;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+/* Site bar (shown once connected) */
+.site-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #eef3f8;
+  border-bottom: 1px solid #e1e4e8;
+  font-size: 12px;
+  color: #33414d;
+}
+.site-bar strong { color: #0969da; word-break: break-all; }
+.site-bar button {
+  border: none;
+  background: none;
+  color: #57606a;
+  font-size: 11.5px;
+  text-decoration: underline;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: 8px;
+}

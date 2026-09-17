@@ -1,5 +1,6 @@
 /* Canvas Styler — content script
- * Runs on byui.instructure.com. Reads settings from chrome.storage.local
+ * Runs on whichever Canvas site the user has connected (see background.js
+ * for how it gets registered there). Reads settings from chrome.storage.local
  * and injects style tags:
  *   1. Generated CSS built from the user's chosen values — only properties
  *      the user has actually touched are emitted, so nothing is ever forced

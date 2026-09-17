@@ -1,8 +1,20 @@
 const STORAGE_KEY = "csxSettings";
+const HOST_KEY = "csxHost";
 const DEFAULTS = { enabled: true, vars: {}, customCSS: "", courseImages: {}, customLogo: "" };
 
 let settings = structuredClone(DEFAULTS);
+let currentHost = "";
 let saveTimer = null;
+
+function normalizeHost(raw) {
+  if (!raw) return "";
+  let s = raw.trim().toLowerCase();
+  s = s.replace(/^https?:\/\//, "");
+  s = s.split("/")[0]; // drop any path/query
+  s = s.split("?")[0];
+  s = s.replace(/\/$/, "");
+  return s;
+}
 
 function save() {
   clearTimeout(saveTimer);
@@ -328,8 +340,8 @@ $("refreshCourses").addEventListener("click", () => {
   list.innerHTML = `<div class="empty">Looking for course cards…</div>`;
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (!tab || !tab.url || !tab.url.includes("byui.instructure.com")) {
-      list.innerHTML = `<div class="empty">Open your byui.instructure.com dashboard in this tab, then refresh.</div>`;
+    if (!tab || !tab.url || !currentHost || !tab.url.includes(currentHost)) {
+      list.innerHTML = `<div class="empty">Open your ${escapeHTML(currentHost || "Canvas")} dashboard in this tab, then refresh.</div>`;
       return;
     }
     chrome.tabs.sendMessage(tab.id, { type: "csx-get-courses" }, (response) => {
@@ -410,11 +422,76 @@ $("importFileInput").addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
+/* ---------------- Canvas site connection ---------------- */
+function showOnboarding(prefill) {
+  $("onboarding").style.display = "block";
+  $("appRoot").style.display = "none";
+  $("hostError").style.display = "none";
+  $("hostInput").value = prefill || "";
+  $("hostInput").focus();
+}
+
+function showApp() {
+  $("onboarding").style.display = "none";
+  $("appRoot").style.display = "block";
+  $("currentHostLabel").textContent = currentHost;
+}
+
+function setHostError(msg) {
+  const el = $("hostError");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+async function connectHost(rawValue) {
+  const host = normalizeHost(rawValue);
+  if (!host || !host.includes(".")) {
+    setHostError("That doesn't look like a valid site address (e.g. byui.instructure.com).");
+    return;
+  }
+
+  const origin = `https://${host}/*`;
+  let granted = false;
+  try {
+    granted = await chrome.permissions.request({ origins: [origin] });
+  } catch (err) {
+    setHostError("Couldn't request permission for that site. Try again.");
+    return;
+  }
+
+  if (!granted) {
+    setHostError("Permission wasn't granted, so styling can't run on that site yet.");
+    return;
+  }
+
+  currentHost = host;
+  await chrome.storage.local.set({ [HOST_KEY]: host });
+  chrome.runtime.sendMessage({ type: "csx-register-host", host }, () => {
+    // Ignore any response — background.js also reacts to the storage change
+    // directly, this just nudges it to also inject into the current tab sooner.
+    showApp();
+  });
+}
+
+$("connectHostBtn").addEventListener("click", () => connectHost($("hostInput").value));
+$("hostInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") connectHost($("hostInput").value);
+});
+$("changeHostBtn").addEventListener("click", () => showOnboarding(currentHost));
+
 /* ---------------- Init ---------------- */
-chrome.storage.local.get([STORAGE_KEY], (result) => {
-  settings = Object.assign(structuredClone(DEFAULTS), result[STORAGE_KEY] || {});
-  settings.vars = settings.vars || {};
-  settings.courseImages = settings.courseImages || {};
-  settings.customLogo = settings.customLogo || "";
-  hydrateUI();
+chrome.storage.local.get([HOST_KEY], (hostResult) => {
+  currentHost = hostResult[HOST_KEY] || "";
+  if (!currentHost) {
+    showOnboarding();
+    return;
+  }
+  chrome.storage.local.get([STORAGE_KEY], (result) => {
+    settings = Object.assign(structuredClone(DEFAULTS), result[STORAGE_KEY] || {});
+    settings.vars = settings.vars || {};
+    settings.courseImages = settings.courseImages || {};
+    settings.customLogo = settings.customLogo || "";
+    hydrateUI();
+    showApp();
+  });
 });

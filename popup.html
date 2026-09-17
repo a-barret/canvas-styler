@@ -6,6 +6,19 @@
 <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
+  <!-- ============= ONBOARDING: pick a Canvas site ============= -->
+  <div id="onboarding">
+    <div class="onboarding-inner">
+      <div class="brand"><img src="icons/icon32.png" alt="" /><span>Canvas Styler</span></div>
+      <p class="hint">Enter the Canvas site you want to restyle — e.g. your school's <code>instructure.com</code> address.</p>
+      <input type="text" id="hostInput" placeholder="e.g. byui.instructure.com" />
+      <button id="connectHostBtn">Connect</button>
+      <p class="hint error" id="hostError" style="display:none"></p>
+      <p class="hint small">Chrome will ask you to approve access to that one site. Nothing is sent anywhere — everything stays on your device.</p>
+    </div>
+  </div>
+
+  <div id="appRoot" style="display:none">
   <header class="topbar">
     <div class="brand">
       <img src="icons/icon32.png" alt="" />
@@ -17,6 +30,11 @@
     </label>
   </header>
 
+  <div class="site-bar">
+    <span>Site: <strong id="currentHostLabel"></strong></span>
+    <button id="changeHostBtn">Change</button>
+  </div>
+
   <nav class="tabs">
     <button class="tab-btn active" data-tab="style">Style</button>
     <button class="tab-btn" data-tab="cards">Course Cards</button>
@@ -27,7 +45,7 @@
     <!-- ============= STYLE TAB ============= -->
     <section class="tab-panel active" id="tab-style">
 
-      <p class="hint">These apply across every byui.instructure.com page.</p>
+      <p class="hint">These apply across every page of your connected Canvas site.</p>
 
       <div class="group">
         <h3>Site-wide colors</h3>
@@ -173,11 +191,12 @@
 
     <!-- ============= CUSTOM CSS TAB ============= -->
     <section class="tab-panel" id="tab-css">
-      <p class="hint">Add any extra CSS rules — applied directly to byui.instructure.com.</p>
+      <p class="hint">Add any extra CSS rules — applied directly to your connected Canvas site.</p>
       <textarea id="customCSS" placeholder=".ic-DashboardCard { /* ... */ }"></textarea>
       <button id="saveCSS">Save custom CSS</button>
     </section>
   </main>
+  </div>
 
   <script src="popup.js"></script>
 </body>

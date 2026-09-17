@@ -1,8 +1,10 @@
-# Canvas Styler for BYU-Idaho
+# Canvas Styler
 
-A lightweight, no-bloat Chrome extension for restyling `byui.instructure.com` —
-in the spirit of the old (pre-bloat) BetterCanvas. Everything runs locally;
-nothing is sent anywhere.
+A lightweight, no-bloat Chrome extension for restyling any Instructure
+Canvas site — in the spirit of the old (pre-bloat) BetterCanvas. Everything
+runs locally; nothing is sent anywhere. It works on whatever Canvas
+instance you point it at (`yourschool.instructure.com`), not just one
+school.
 
 ## Install (unpacked / developer mode)
 
@@ -14,14 +16,29 @@ nothing is sent anywhere.
 5. Pin the extension: click the puzzle-piece icon in the toolbar, then click
    the pin next to "Canvas Styler" so it stays visible next to the address bar.
 
+## First-time setup: connect your Canvas site
+
+The first time you open the popup, it asks for your Canvas site's address —
+e.g. `byui.instructure.com`, `canvas.yourschool.edu`, etc. Enter it and
+click **Connect**. Chrome will show a one-time permission prompt asking you
+to approve access to that specific site; approve it and you're set.
+
+- You only have to do this once — the address is saved, and styling starts
+  working automatically on that site from then on (including in new tabs
+  and after restarting Chrome).
+- You can change the connected site later via the **Change** link next to
+  "Site:" at the top of the popup.
+- The extension only ever asks for access to the one site you type in —
+  never to every website you visit.
+
 ## Using it
 
 Click the extension's icon to open the popup. It has three tabs:
 
 - **Style** — split into clearly-scoped sections:
   - *Site-wide colors*: page background, nav bar color, **nav bar icon
-    color**, and accent/link color. These apply on every byui.instructure.com
-    page.
+    color**, and accent/link color. These apply on every page of your
+    connected Canvas site.
   - *Branding*: replace the school logo in the top-left corner of the nav bar
     with your own image (paste a URL or upload a file).
   - *Site-wide font*: font family/color/bold/italic/underline.
@@ -59,10 +76,16 @@ At the bottom of the **Style** tab:
   it. This replaces your current settings after a confirmation prompt.
 
 This is handy for backing things up before experimenting, or copying your
-setup to another computer/profile.
+setup to another computer/profile. Note this backup does not include which
+Canvas site you're connected to — that's tied to Chrome's own permission
+grant, not the settings file, so it's a one-time setup step per browser
+profile.
 
 ## What's new in this version
 
+- **Works with any Canvas site**, not just one school — you type your
+  school's address in during setup instead of it being hardcoded.
+- **Export/import settings** as a `.json` file.
 - **Nav bar icon color** — recolor the sidebar icons independently of the
   nav bar background color.
 - **Custom logo** — replace the top-left school logo with your own image.
@@ -81,9 +104,11 @@ setup to another computer/profile.
 
 ## Notes
 
-- Only runs on `https://byui.instructure.com/*`.
-- Settings are stored with `chrome.storage.local`, so they stay on this
-  device/browser profile only.
+- Only runs on the one Canvas site you connect during setup.
+- Settings (styles, custom CSS, logo, course images) are stored with
+  `chrome.storage.local`, so they stay on this device/browser profile only.
+- The connected site address is also stored locally and is what tells the
+  extension which site to request permission for and inject into.
 - If Canvas updates its markup and something stops matching, the Custom CSS
   tab is the escape hatch — inspect the element and add a rule targeting the
   new class name.
