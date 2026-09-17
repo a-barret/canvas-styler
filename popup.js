@@ -44,6 +44,8 @@ function hydrateUI() {
   if (v.navBg) $("navBg").value = v.navBg;
   if (v.navIconColor) $("navIconColor").value = v.navIconColor;
   if (v.accent) $("accent").value = v.accent;
+  if (v.activeBg) $("activeBg").value = v.activeBg;
+  if (v.activeIconColor) $("activeIconColor").value = v.activeIconColor;
   if (v.cardBg) $("cardBg").value = v.cardBg;
 
   const opacityPct = v.opacity ? Math.round(parseFloat(v.opacity) * 100) : 100;
@@ -129,6 +131,8 @@ bindColor("pageBg", "pageBg");
 bindColor("navBg", "navBg");
 bindColor("navIconColor", "navIconColor");
 bindColor("accent", "accent");
+bindColor("activeBg", "activeBg");
+bindColor("activeIconColor", "activeIconColor");
 bindColor("cardBg", "cardBg");
 bindColor("fontColor", "fontColor");
 bindColor("borderColor", "borderColor");

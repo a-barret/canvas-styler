@@ -56,6 +56,28 @@
     "#global_nav_tray_container .ic-icon-svg",
   ].join(",\n");
 
+  // The highlighted "pill"/box behind the currently-active nav item
+  // (e.g. Dashboard while you're on the dashboard page). Canvas paints this
+  // on more than one element depending on skin/version — the <li> itself,
+  // the <a> link inside it, or both — and sometimes via a background-image/
+  // gradient rather than a flat background-color. Selectors are doubled up
+  // (repeating the active class) purely to out-specificity Canvas's own
+  // !important rule, since two !important declarations resolve by
+  // specificity first, cascade order second.
+  const NAV_ACTIVE_BOX_SELECTOR = [
+    "#header .ic-app-header__menu-list-item--active",
+    "#header .ic-app-header__menu-list-item--active.ic-app-header__menu-list-item--active",
+    "#header .ic-app-header__menu-list-item--active .ic-app-header__menu-list-link",
+    "#header .ic-app-header__menu-list-item--active .ic-app-header__menu-list-link.ic-app-header__menu-list-link",
+  ].join(",\n");
+
+  // The icon (and its badge) inside that active nav item, kept separate
+  // from the generic nav icon color so it can be tuned independently.
+  const NAV_ACTIVE_ICON_SELECTOR = [
+    "#header .ic-app-header__menu-list-item--active .ic-icon-svg",
+    "#header .ic-app-header__menu-list-item--active .ic-icon-svg *",
+  ].join(",\n");
+
   const LOGO_SELECTOR = [
     "#header-logo .ic-app-header__logomark",
     ".ic-app-header__logomark",
@@ -128,6 +150,17 @@
   border-color: ${v.accent} !important;
   color: #fff !important;
 }\n`;
+    }
+
+    // Active nav item highlight box + icon color. Kept as their own rules,
+    // emitted after the accent block above, so a chosen activeIconColor
+    // wins over accent's generic ".ic-app-header__menu-list-item--active
+    // .ic-icon-svg" color rule for that same element.
+    if (v.activeBg) {
+      css += `${NAV_ACTIVE_BOX_SELECTOR} {\n  background-color: ${v.activeBg} !important;\n  background-image: none !important;\n}\n`;
+    }
+    if (v.activeIconColor) {
+      css += `${NAV_ACTIVE_ICON_SELECTOR} {\n  color: ${v.activeIconColor} !important;\n  fill: ${v.activeIconColor} !important;\n  stroke: ${v.activeIconColor} !important;\n}\n`;
     }
 
     const typoDecls = [];
