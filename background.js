@@ -20,13 +20,20 @@ async function registerForHost(host) {
     persistAcrossSessions: true,
   };
 
+  // Don't trust a check-then-act pattern here (getRegisteredContentScripts
+  // then register/update) — it isn't atomic and can race across service
+  // worker restarts. Instead, unconditionally unregister any existing
+  // registration for this ID first (ignoring "not found" errors), then
+  // register fresh. This avoids depending on matching Chrome's exact
+  // "duplicate" error message.
   try {
-    const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [SCRIPT_ID] });
-    if (existing.length) {
-      await chrome.scripting.updateContentScripts([def]);
-    } else {
-      await chrome.scripting.registerContentScripts([def]);
-    }
+    await chrome.scripting.unregisterContentScripts({ ids: [SCRIPT_ID] });
+  } catch (err) {
+    // No existing registration to remove — fine, continue.
+  }
+
+  try {
+    await chrome.scripting.registerContentScripts([def]);
   } catch (err) {
     console.error("Canvas Styler: could not register content script", err);
     return;
