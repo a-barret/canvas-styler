@@ -72,10 +72,27 @@
   function typeGroup(type) {
     return ALL_TYPES.includes(type) ? type : "assignment";
   }
+
+  // Canvas doesn't always report announcements as plannable_type
+  // "announcement" (they can arrive as discussion topics), so also check the
+  // plannable's own flags and the link.
+  function kindOf(raw) {
+    const p = raw.plannable || {};
+    const type = String(raw.plannable_type || "").toLowerCase();
+    const url = String(raw.html_url || p.html_url || "");
+    if (
+      type === "announcement" ||
+      p.is_announcement === true ||
+      p.type === "announcement" ||
+      p.discussion_type === "announcement" ||
+      /\/announcements\//i.test(url)
+    ) return "announcement";
+    return type;
+  }
   function visibleItems() {
     const t = cfg();
     const allowed = Array.isArray(t.types) ? t.types : ALL_TYPES;
-    return state.items.filter((i) => allowed.includes(typeGroup(i.type)));
+    return state.items.filter((i) => allowed.includes(typeGroup(i.kind)));
   }
 
   // Task cards follow the Style tab's "Card background" color. Text color
@@ -264,6 +281,7 @@
     return {
       key: raw.plannable_type + ":" + raw.plannable_id,
       type: raw.plannable_type,
+      kind: kindOf(raw),
       id: raw.plannable_id,
       courseId: String(courseId),
       courseName: raw.context_name || "Course",
@@ -383,7 +401,7 @@
       <div class="csx-tl-body">
         ${title}
         <div class="csx-tl-meta">${esc(fmtDue(i.due))} | ${esc(pts)}</div>
-        <div class="csx-tl-meta">${esc(i.courseName)} | ${esc(TYPE_LABELS[i.type] || "Task")}</div>
+        <div class="csx-tl-meta">${esc(i.courseName)} | ${esc(TYPE_LABELS[i.kind] || "Task")}</div>
       </div>
       ${btn}
     </div>`;
