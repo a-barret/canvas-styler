@@ -108,6 +108,8 @@ function hydrateUI() {
     logoPreview.style.backgroundImage = "";
     $("logoUrlInput").value = "";
   }
+
+  if (typeof hydrateTaskList === "function") hydrateTaskList();
 }
 
 function setToggleState(btn, on) {

@@ -38,6 +38,7 @@
   <nav class="tabs">
     <button class="tab-btn active" data-tab="style">Style</button>
     <button class="tab-btn" data-tab="cards">Course Cards</button>
+    <button class="tab-btn" data-tab="tasklist">Task List</button>
     <button class="tab-btn" data-tab="css">Custom CSS</button>
   </nav>
 
@@ -197,6 +198,86 @@
       <div id="coursesList" class="courses-list"></div>
     </section>
 
+    <!-- ============= TASK LIST TAB ============= -->
+    <section class="tab-panel" id="tab-tasklist">
+      <div class="group">
+        <h3>Task list</h3>
+        <div class="row toggles">
+          <button class="toggle-btn tl-mode-btn" data-val="off">Off</button>
+          <button class="toggle-btn tl-mode-btn" data-val="default">Canvas Default</button>
+          <button class="toggle-btn tl-mode-btn" data-val="styled">Styled</button>
+        </div>
+      </div>
+
+      <div id="tlSettings">
+        <div class="group">
+          <h3>Progress rings</h3>
+          <div class="row toggles">
+            <button class="toggle-btn tl-ring-btn" data-val="off">Off</button>
+            <button class="toggle-btn tl-ring-btn" data-val="on">On</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Cards shown</h3>
+          <div class="row">
+            <label for="tlCardLimit">Cards to show at first</label>
+            <input type="number" id="tlCardLimit" min="1" max="50" value="4" />
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Pull tasks from</h3>
+          <div class="row">
+            <label for="tlPeriod">Time period</label>
+            <select id="tlPeriod">
+              <option value="all">None (all tasks)</option>
+              <option value="today">Today</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="row" id="tlWeekModeRow">
+            <label for="tlWeekMode">Week</label>
+            <select id="tlWeekMode">
+              <option value="rolling">Rolling next 7 days</option>
+              <option value="calendar">7 days from start of week</option>
+            </select>
+          </div>
+          <div class="row" id="tlWeekStartRow">
+            <label for="tlWeekStart">Start of the week</label>
+            <select id="tlWeekStart">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+          <div class="row" id="tlMonthModeRow">
+            <label for="tlMonthMode">Month</label>
+            <select id="tlMonthMode">
+              <option value="rolling">Rolling next 30 days</option>
+              <option value="calendar">Start of month to month end</option>
+            </select>
+          </div>
+          <div id="tlCustomRows" style="display:none">
+            <div class="row">
+              <label for="tlCustomStart">Start date</label>
+              <input type="date" id="tlCustomStart" />
+            </div>
+            <div class="row">
+              <label for="tlCustomEnd">End date</label>
+              <input type="date" id="tlCustomEnd" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============= CUSTOM CSS TAB ============= -->
     <section class="tab-panel" id="tab-css">
       <p class="hint">Add any extra CSS rules — applied directly to your connected Canvas site.</p>
@@ -207,5 +288,6 @@
   </div>
 
   <script src="popup.js"></script>
+  <script src="tasklist-popup.js"></script>
 </body>
 </html>

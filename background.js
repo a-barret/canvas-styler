@@ -15,7 +15,7 @@ async function registerForHost(host) {
   const def = {
     id: SCRIPT_ID,
     matches,
-    js: ["content.js"],
+    js: ["content.js", "tasklist.js"],
     runAt: "document_start",
     persistAcrossSessions: true,
   };
@@ -45,7 +45,7 @@ async function registerForHost(host) {
     const tabs = await chrome.tabs.query({ url: matches });
     for (const tab of tabs) {
       try {
-        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js", "tasklist.js"] });
       } catch (e) {
         // Tab may not be scriptable (chrome://, PDF viewer, etc.) — ignore.
       }
