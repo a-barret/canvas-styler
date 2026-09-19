@@ -2,8 +2,10 @@
  * Loaded after popup.js and shares its `settings` object and `save()`.
  * popup.js calls hydrateTaskList() at the end of hydrateUI().
  */
+const TL_ALL_TYPES = ["assignment", "quiz", "discussion_topic", "wiki_page", "planner_note", "announcement"];
 const TL_POPUP_DEFAULTS = {
   mode: "default",
+  types: TL_ALL_TYPES,
   weekStart: 0,
   rings: true,
   cardLimit: 4,
@@ -37,6 +39,8 @@ function hydrateTaskList() {
   document.querySelectorAll(".tl-mode-btn").forEach((b) => b.classList.toggle("active", b.dataset.val === t.mode));
   document.querySelectorAll(".tl-ring-btn").forEach((b) => b.classList.toggle("active", (b.dataset.val === "on") === !!t.rings));
   $("tlCardLimit").value = t.cardLimit;
+  const types = Array.isArray(t.types) ? t.types : TL_ALL_TYPES;
+  document.querySelectorAll(".tl-type-cb").forEach((cb) => { cb.checked = types.includes(cb.dataset.type); });
   $("tlWeekStart").value = String(t.weekStart);
   $("tlPeriod").value = t.period;
   $("tlWeekMode").value = t.weekMode;
@@ -82,6 +86,15 @@ $("tlCardLimit").addEventListener("change", (e) => {
   e.target.value = n;
   tlState().cardLimit = n;
   save();
+});
+
+document.querySelectorAll(".tl-type-cb").forEach((cb) => {
+  cb.addEventListener("change", () => {
+    tlState().types = Array.from(document.querySelectorAll(".tl-type-cb"))
+      .filter((x) => x.checked)
+      .map((x) => x.dataset.type);
+    save();
+  });
 });
 
 $("tlCustomStart").addEventListener("change", (e) => { tlState().customStart = e.target.value; save(); });

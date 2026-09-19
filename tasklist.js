@@ -21,8 +21,11 @@
   const STYLE_ID = "csx-tl-style";
   const HIDE_ID = "csx-tl-hide";
 
+  const ALL_TYPES = ["assignment", "quiz", "discussion_topic", "wiki_page", "planner_note", "announcement"];
+
   const TL_DEFAULTS = {
     mode: "default",
+    types: ALL_TYPES,
     weekStart: 0,
     rings: true,
     cardLimit: 4,
@@ -61,7 +64,40 @@
     wiki_page: "Page",
     planner_note: "Note",
     announcement: "Announcement",
+    sub_assignment: "Assignment",
+    assessment_request: "Peer review",
   };
+
+  // Planner types that aren't in the filter list are grouped with assignments.
+  function typeGroup(type) {
+    return ALL_TYPES.includes(type) ? type : "assignment";
+  }
+  function visibleItems() {
+    const t = cfg();
+    const allowed = Array.isArray(t.types) ? t.types : ALL_TYPES;
+    return state.items.filter((i) => allowed.includes(typeGroup(i.type)));
+  }
+
+  // Task cards follow the Style tab's "Card background" color. Text color
+  // flips to light when that background is dark so cards stay readable.
+  function applyCardColors() {
+    const root = document.getElementById(ROOT_ID);
+    if (!root) return;
+    const bg = isEnabled() && settings.vars && settings.vars.cardBg;
+    if (!bg) {
+      ["--csx-card-bg", "--csx-card-fg", "--csx-card-meta"].forEach((p) => root.style.removeProperty(p));
+      return;
+    }
+    root.style.setProperty("--csx-card-bg", bg);
+    const m = /^#?([0-9a-f]{6})$/i.exec(bg);
+    if (m) {
+      const n = parseInt(m[1], 16);
+      const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+      const dark = lum < 0.5;
+      root.style.setProperty("--csx-card-fg", dark ? "#f4f6f8" : "#2d3b45");
+      root.style.setProperty("--csx-card-meta", dark ? "#c3cad1" : "#5b6770");
+    }
+  }
 
   let settings = null;
   let prevTLJson = "";
@@ -359,14 +395,15 @@
     const t = cfg();
     const range = getRange(t, state.offset);
     const noNav = !!range.all || !!range.invalid;
-    const incomplete = state.items.filter((i) => !i.completed);
-    const complete = state.items.filter((i) => i.completed);
+    const visible = visibleItems();
+    const incomplete = visible.filter((i) => !i.completed);
+    const complete = visible.filter((i) => i.completed);
     const shown = state.tab === "complete" ? complete : incomplete;
 
     let rings = "";
     if (t.rings) {
       const byCourse = new Map();
-      state.items.forEach((i) => {
+      visible.forEach((i) => {
         if (!byCourse.has(i.courseId)) byCourse.set(i.courseId, { name: i.courseName, done: 0, total: 0 });
         const c = byCourse.get(i.courseId);
         c.total++;
@@ -512,6 +549,8 @@
 .csx-tl-nav:hover:not(:disabled){background:#f1f3f5}
 .csx-tl-nav:disabled{opacity:.35;cursor:default}
 .csx-tl-rings{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px}
+.csx-tl-rings>:first-child{margin-left:auto}
+.csx-tl-rings>:last-child{margin-right:auto}
 .csx-tl-ring{flex:0 0 auto;width:84px;text-align:center}
 .csx-tl-ring svg{display:block;margin:0 auto}
 .csx-tl-ring-count{font-size:12px;font-weight:600;margin-top:2px}
@@ -520,12 +559,12 @@
 .csx-tl-tab{flex:1;padding:9px 6px;border:none;background:none;font-size:14px;color:#5b6770;border-bottom:3px solid transparent;margin-bottom:-2px}
 .csx-tl-tab.on{color:#2d3b45;font-weight:700;border-bottom-color:#2d3b45}
 .csx-tl-list{display:flex;flex-direction:column;gap:8px}
-.csx-tl-card{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:#fff;border:1px solid #e3e6ea;border-left:6px solid var(--csx-c,#888);border-radius:6px}
+.csx-tl-card{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:var(--csx-card-bg,#fff);border:1px solid #e3e6ea;border-left:6px solid var(--csx-c,#888);border-radius:6px}
 .csx-tl-body{flex:1;min-width:0}
-.csx-tl-title{display:block;font-weight:700;font-size:15px;color:#2d3b45;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csx-tl-title{display:block;font-weight:700;font-size:15px;color:var(--csx-card-fg,#2d3b45);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a.csx-tl-title:hover{text-decoration:underline}
-.csx-tl-meta{font-size:12px;color:#5b6770;margin-top:2px}
-.csx-tl-act{flex:0 0 auto;width:28px;height:28px;border-radius:6px;border:2px solid var(--csx-c,#888);background:#fff;color:var(--csx-c,#888);font-size:17px;line-height:1;padding:0}
+.csx-tl-meta{font-size:12px;color:var(--csx-card-meta,#5b6770);margin-top:2px}
+.csx-tl-act{flex:0 0 auto;width:28px;height:28px;border-radius:6px;border:2px solid var(--csx-c,#888);background:var(--csx-card-bg,#fff);color:var(--csx-c,#888);font-size:17px;line-height:1;padding:0}
 .csx-tl-check:hover{background:var(--csx-c,#888)}
 .csx-tl-check:hover::after{content:"\\2713";color:#fff;font-size:16px}
 .csx-tl-reset:hover{background:var(--csx-c,#888);color:#fff}
@@ -632,6 +671,7 @@ html.csx-tl-resizing,html.csx-tl-resizing *{cursor:ew-resize !important;user-sel
       document.documentElement.classList.add("csx-tl-wide");
     } else cards.parentNode.insertBefore(root, cards);
     mounted = true;
+    applyCardColors();
     render();
     if (state.loadedOnce) return; // re-mounted after Canvas rebuilt the sidebar; keep data
     state.loadedOnce = true;
@@ -647,8 +687,8 @@ html.csx-tl-resizing,html.csx-tl-resizing *{cursor:ew-resize !important;user-sel
 
   function onSettings(next) {
     settings = next || {};
-    // cardLimit and width only affect rendering, so they're left out of the reload check.
-    const tlJson = JSON.stringify(Object.assign({}, cfg(), { cardLimit: 0, width: 0 }));
+    // cardLimit, width and types only affect rendering, so they're left out of the reload check.
+    const tlJson = JSON.stringify(Object.assign({}, cfg(), { cardLimit: 0, width: 0, types: 0 }));
     const changed = tlJson !== prevTLJson;
     if (changed) {
       const prev = prevTLJson ? JSON.parse(prevTLJson) : null;
@@ -663,6 +703,7 @@ html.csx-tl-resizing,html.csx-tl-resizing *{cursor:ew-resize !important;user-sel
     const wasMounted = !!document.getElementById(ROOT_ID);
     apply();
     if (wasMounted && !dragging && mode() === "styled") applyWidth();
+    if (wasMounted) applyCardColors();
     if (changed && wasMounted && mode() === "styled") load();
     else if (wasMounted) render();
   }
