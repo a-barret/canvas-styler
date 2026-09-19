@@ -37,6 +37,9 @@
     "#dashboard_header_container *:not([class*=\"icon\"]):not(svg):not(svg *)",
     ".ic-Dashboard-header",
     ".ic-Dashboard-header *:not([class*=\"icon\"]):not(svg):not(svg *)",
+    ".item-group-container",
+    ".header-bar",
+    "#breadcrumbs",
   ].join(",\n");
 
   const NAV_BG_SELECTOR = [
