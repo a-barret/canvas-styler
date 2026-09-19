@@ -26,6 +26,7 @@
     weekStart: 0,
     rings: true,
     cardLimit: 4,
+    width: 440,
     period: "week",
     weekMode: "rolling",
     monthMode: "rolling",
@@ -394,6 +395,8 @@
     }
 
     root.innerHTML = `
+      <div class="csx-tl-grip csx-tl-grip-l" data-grip="l" role="separator" aria-orientation="vertical" aria-label="Resize task list (drag, or use arrow keys; double-click to reset)" tabindex="0"></div>
+      <div class="csx-tl-grip csx-tl-grip-r" data-grip="r" role="separator" aria-orientation="vertical" aria-label="Resize task list (drag, or use arrow keys; double-click to reset)" tabindex="0"></div>
       <div class="csx-tl-head">
         <button class="csx-tl-nav" data-act="prev" aria-label="Previous period" ${noNav ? "disabled" : ""}>&#8249;</button>
         <div class="csx-tl-range" aria-live="polite">${esc(rangeLabel(range))}</div>
@@ -422,13 +425,85 @@
     else if (act === "reset") setComplete(el.getAttribute("data-key"), false);
   }
 
+  /* ---------------- resizing ---------------- */
+  const MIN_W = 300;
+  const DEFAULT_W = 440;
+  let dragging = false;
+
+  function clampWidth(w) {
+    const max = Math.max(MIN_W, Math.min(900, window.innerWidth - 420));
+    return Math.round(Math.min(max, Math.max(MIN_W, w)));
+  }
+  function setWidthVar(w) {
+    document.documentElement.style.setProperty("--csx-tl-w", w + "px");
+  }
+  function applyWidth() {
+    const w = Number(cfg().width);
+    setWidthVar(clampWidth(Number.isFinite(w) && w > 0 ? w : DEFAULT_W));
+  }
+  function saveWidth(w) {
+    chrome.storage.local.get([STORAGE_KEY], (r) => {
+      const s = r[STORAGE_KEY] || {};
+      s.taskList = Object.assign({}, s.taskList || {}, { width: w });
+      chrome.storage.local.set({ [STORAGE_KEY]: s });
+    });
+  }
+  function currentWidth() {
+    const wrap = document.getElementById("right-side-wrapper");
+    return wrap ? wrap.getBoundingClientRect().width : DEFAULT_W;
+  }
+
+  function onGripDown(e) {
+    const grip = e.target.closest(".csx-tl-grip");
+    if (!grip || e.button > 0) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = currentWidth();
+    const dir = grip.getAttribute("data-grip") === "l" ? -1 : 1; // left edge: drag left = wider
+    let w = startW;
+    dragging = true;
+    document.documentElement.classList.add("csx-tl-resizing");
+    const move = (ev) => {
+      w = clampWidth(startW + dir * (ev.clientX - startX));
+      setWidthVar(w);
+    };
+    const up = () => {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      document.documentElement.classList.remove("csx-tl-resizing");
+      dragging = false;
+      saveWidth(w);
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  }
+
+  function onGripKey(e) {
+    const grip = e.target.closest && e.target.closest(".csx-tl-grip");
+    if (!grip || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    e.preventDefault();
+    const leftEdge = grip.getAttribute("data-grip") === "l";
+    const grow = leftEdge ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+    const w = clampWidth(currentWidth() + (grow ? 20 : -20));
+    setWidthVar(w);
+    saveWidth(w);
+  }
+
+  function onGripDouble(e) {
+    if (!e.target.closest(".csx-tl-grip")) return;
+    setWidthVar(clampWidth(DEFAULT_W));
+    saveWidth(DEFAULT_W);
+  }
+
   /* ---------------- mounting / styles ---------------- */
   function ensureStyle() {
     if (document.getElementById(STYLE_ID) || !document.head) return;
     const s = document.createElement("style");
     s.id = STYLE_ID;
     s.textContent = `
-#${ROOT_ID}{box-sizing:border-box;width:100%;max-width:100%;margin:0 0 16px;padding:14px;background:#fff;border:1px solid #d9dde2;border-radius:10px;color:#2d3b45}
+#${ROOT_ID}{position:relative;box-sizing:border-box;width:100%;max-width:100%;margin:0 0 16px;padding:14px;background:none;border-left:1px solid #d9dde2;color:#2d3b45}
 #${ROOT_ID} *{box-sizing:border-box}
 #${ROOT_ID} button{font-family:inherit;cursor:pointer}
 .csx-tl-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
@@ -460,9 +535,15 @@ a.csx-tl-title:hover{text-decoration:underline}
 .csx-tl-error{margin-bottom:10px;padding:8px 10px;border-radius:6px;background:#fff0f0;color:#a4141d;font-size:13px}
 @media (prefers-reduced-motion:no-preference){.csx-tl-act,.csx-tl-nav{transition:background .12s}}
 @media (min-width:1000px){
-html.csx-tl-wide #right-side-wrapper{width:460px !important;min-width:460px !important;max-width:none !important;flex:0 0 460px !important}
+html.csx-tl-wide #right-side-wrapper{width:var(--csx-tl-w,440px) !important;min-width:var(--csx-tl-w,440px) !important;max-width:none !important;flex:0 0 var(--csx-tl-w,440px) !important}
 html.csx-tl-wide #right-side{width:100% !important;max-width:none !important}
+html.csx-tl-wide .csx-tl-grip{display:block}
 }
+.csx-tl-grip{display:none;position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize;z-index:2;touch-action:none;border-radius:8px}
+.csx-tl-grip-l{left:0}
+.csx-tl-grip-r{right:0}
+.csx-tl-grip:hover,.csx-tl-grip:focus-visible{background:rgba(0,118,182,.28);outline:none}
+html.csx-tl-resizing,html.csx-tl-resizing *{cursor:ew-resize !important;user-select:none !important}
 `;
     document.head.appendChild(s);
   }
@@ -526,6 +607,7 @@ html.csx-tl-wide #right-side{width:100% !important;max-width:none !important}
     mounted = false;
     state.loadedOnce = false;
     document.documentElement.classList.remove("csx-tl-wide");
+    document.documentElement.style.removeProperty("--csx-tl-w");
   }
 
   function ensureMounted() {
@@ -541,6 +623,10 @@ html.csx-tl-wide #right-side{width:100% !important;max-width:none !important}
     root.id = ROOT_ID;
     root.setAttribute("aria-label", "Task list");
     root.addEventListener("click", onClick);
+    root.addEventListener("pointerdown", onGripDown);
+    root.addEventListener("keydown", onGripKey);
+    root.addEventListener("dblclick", onGripDouble);
+    applyWidth();
     if (side) {
       side.insertBefore(root, side.firstChild); // where Canvas's To Do list lives
       document.documentElement.classList.add("csx-tl-wide");
@@ -561,8 +647,8 @@ html.csx-tl-wide #right-side{width:100% !important;max-width:none !important}
 
   function onSettings(next) {
     settings = next || {};
-    // cardLimit only affects rendering, so it's left out of the reload check.
-    const tlJson = JSON.stringify(Object.assign({}, cfg(), { cardLimit: 0 }));
+    // cardLimit and width only affect rendering, so they're left out of the reload check.
+    const tlJson = JSON.stringify(Object.assign({}, cfg(), { cardLimit: 0, width: 0 }));
     const changed = tlJson !== prevTLJson;
     if (changed) {
       const prev = prevTLJson ? JSON.parse(prevTLJson) : null;
@@ -576,6 +662,7 @@ html.csx-tl-wide #right-side{width:100% !important;max-width:none !important}
     prevTLJson = tlJson;
     const wasMounted = !!document.getElementById(ROOT_ID);
     apply();
+    if (wasMounted && !dragging && mode() === "styled") applyWidth();
     if (changed && wasMounted && mode() === "styled") load();
     else if (wasMounted) render();
   }
