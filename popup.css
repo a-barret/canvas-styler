@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 
 body {
-  width: 320px;
+  width: 360px;
   margin: 0;
   font-family: -apple-system, "Segoe UI", Arial, sans-serif;
   font-size: 13px;
@@ -120,6 +120,7 @@ button {
   border: 1px solid #d1242f;
   color: #d1242f;
   border-radius: 6px;
+  margin-bottom: 16px;
 }
 #resetBtn.danger:hover { background: #fff0f0; }
 

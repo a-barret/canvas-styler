@@ -40,6 +40,7 @@
     ".item-group-container",
     ".header-bar",
     "#breadcrumbs",
+    ".module-sequence-footer-content",
   ].join(",\n");
 
   const NAV_BG_SELECTOR = [
