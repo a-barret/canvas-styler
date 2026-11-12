@@ -128,8 +128,65 @@
     loading: false,
     error: "",
     colors: null,
+    timeZone: null,
     seq: 0,
   };
+
+  /* ---------------- Canvas time zone ---------------- */
+  function systemTimeZone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  function isValidTimeZone(timeZone) {
+    if (!timeZone || typeof timeZone !== "string") return false;
+    try { new Intl.DateTimeFormat("en-US", { timeZone }); return true; }
+    catch (e) { return false; }
+  }
+  function canvasTimeZone() { return state.timeZone || systemTimeZone(); }
+
+  async function loadTimeZone() {
+    if (state.timeZone) return state.timeZone;
+    try {
+      const res = await api("/api/v1/users/self/profile");
+      const data = await res.json();
+      state.timeZone = isValidTimeZone(data && data.time_zone) ? data.time_zone : systemTimeZone();
+    } catch (e) {
+      state.timeZone = systemTimeZone();
+    }
+    return state.timeZone;
+  }
+
+  function zonedParts(date, timeZone) {
+    const f = new Intl.DateTimeFormat("en-US", {
+      timeZone, hourCycle: "h23",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+    const o = {};
+    f.formatToParts(date).forEach((p) => { o[p.type] = p.value; });
+    return { y: +o.year, m: +o.month, d: +o.day, h: +o.hour, mi: +o.minute, s: +o.second };
+  }
+
+  // Calendar date "today" in the Canvas time zone, as a plain local Date at
+  // midnight, so the existing calendar math (addDays, getDay, ymd) keeps
+  // working unchanged.
+  function zonedToday() {
+    const p = zonedParts(new Date(), canvasTimeZone());
+    return new Date(p.y, p.m - 1, p.d);
+  }
+
+  function zoneOffsetMs(instantMs, timeZone) {
+    const p = zonedParts(new Date(instantMs), timeZone);
+    return Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi, p.s) - Math.floor(instantMs / 1000) * 1000;
+  }
+
+  // Wall-clock time in `timeZone` -> real instant. Two passes handle DST transitions.
+  function zonedInstant(y, m, d, h, mi, s, ms, timeZone) {
+    const wall = Date.UTC(y, m - 1, d, h, mi, s, ms);
+    let t = wall - zoneOffsetMs(wall, timeZone);
+    t = wall - zoneOffsetMs(t, timeZone);
+    return new Date(t);
+  }
+
 
   /* ---------------- helpers ---------------- */
   function cfg() {
@@ -161,7 +218,7 @@
   /* ---------------- time period ---------------- */
   // Returns { all:true } | { invalid:true } | { start, end } (local dates).
   function getRange(t, offset) {
-    const today = startOfDay(new Date());
+    const today = zonedToday();
     switch (t.period) {
       case "all":
         return { all: true };
@@ -296,27 +353,32 @@
 
   async function load() {
     const t = cfg();
-    const range = getRange(t, state.offset);
     const my = ++state.seq;
     state.error = "";
+    state.loading = true;
+    render();
+    await loadTimeZone(); // must resolve before computing ranges
+    if (my !== state.seq) return;
+    const range = getRange(t, state.offset);
     if (range.invalid) {
       state.items = [];
       state.loading = false;
       render();
       return;
     }
-    state.loading = true;
-    render();
     try {
       await loadColors();
+      const timeZone = canvasTimeZone();
+      const toStart = (d) => zonedInstant(d.getFullYear(), d.getMonth() + 1, d.getDate(), 0, 0, 0, 0, timeZone);
+      const toEnd = (d) => zonedInstant(d.getFullYear(), d.getMonth() + 1, d.getDate(), 23, 59, 59, 999, timeZone);
       let start, end;
       if (range.all) {
-        const today = startOfDay(new Date());
-        start = addDays(today, -365);
-        end = endOfDay(addDays(today, 365));
+        const today = zonedToday();
+        start = toStart(addDays(today, -365));
+        end = toEnd(addDays(today, 365));
       } else {
-        start = startOfDay(range.start);
-        end = endOfDay(range.end);
+        start = toStart(range.start);
+        end = toEnd(range.end);
       }
       const qs = new URLSearchParams({
         start_date: start.toISOString(),
@@ -385,8 +447,10 @@
   function fmtDue(iso) {
     if (!iso) return "No due date";
     const d = new Date(iso);
-    return "Due " + d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + ", " +
-      d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    const timeZone = canvasTimeZone();
+    return "Due " +
+      d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone }) + ", " +
+      d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone });
   }
 
   function cardHTML(i) {
