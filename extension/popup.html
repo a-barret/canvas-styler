@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Canvas Styler</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ============= ONBOARDING: pick a Canvas site ============= -->
+  <div id="onboarding">
+    <div class="onboarding-inner">
+      <div class="brand"><img src="icons/icon32.png" alt="" /><span>Canvas Styler</span></div>
+      <p class="hint">Enter the Canvas site you want to restyle — e.g. your school's <code>instructure.com</code> address.</p>
+      <input type="text" id="hostInput" placeholder="e.g. byui.instructure.com" />
+      <button id="connectHostBtn">Connect</button>
+      <p class="hint error" id="hostError" style="display:none"></p>
+      <p class="hint small">Chrome will ask you to approve access to that one site. Nothing is sent anywhere — everything stays on your device.</p>
+    </div>
+  </div>
+
+  <div id="appRoot" style="display:none">
+  <header class="topbar">
+    <div class="brand">
+      <img src="icons/icon32.png" alt="" />
+      <span>Canvas Styler</span>
+    </div>
+    <label class="switch" title="Turn all custom styling on/off">
+      <input type="checkbox" id="enabledToggle" checked />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <div class="site-bar">
+    <span>Site: <strong id="currentHostLabel"></strong></span>
+    <button id="changeHostBtn">Change</button>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="style">Style</button>
+    <button class="tab-btn" data-tab="cards">Course Cards</button>
+    <button class="tab-btn" data-tab="tasklist">Task List</button>
+    <button class="tab-btn" data-tab="css">Custom CSS</button>
+  </nav>
+
+  <main>
+    <!-- ============= STYLE TAB ============= -->
+    <section class="tab-panel active" id="tab-style">
+
+      <p class="hint">These apply across every page of your connected Canvas site.</p>
+
+      <div class="group">
+        <h3>Site-wide colors</h3>
+        <div class="row">
+          <label for="pageBg">Page background</label>
+          <input type="color" id="pageBg" value="#f5f5f5" />
+        </div>
+        <div class="row">
+          <label for="navBg">Nav bar</label>
+          <input type="color" id="navBg" value="#394b58" />
+        </div>
+        <div class="row">
+          <label for="navIconColor">Nav bar icons</label>
+          <input type="color" id="navIconColor" value="#ffffff" />
+        </div>
+        <div class="row">
+          <label for="accent">Accent / links</label>
+          <input type="color" id="accent" value="#0374b5" />
+        </div>
+        <div class="row">
+          <label for="activeBg">Active item highlight box</label>
+          <input type="color" id="activeBg" value="#0076b6" />
+        </div>
+        <div class="row">
+          <label for="activeIconColor">Active item icon</label>
+          <input type="color" id="activeIconColor" value="#ffffff" />
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Branding</h3>
+        <p class="hint">Replace the school logo in the top-left corner of the nav bar.</p>
+        <div class="row">
+          <div class="logo-preview" id="logoPreview"></div>
+          <input type="text" id="logoUrlInput" placeholder="Paste image URL…" />
+        </div>
+        <div class="row">
+          <label class="upload">Upload logo
+            <input type="file" accept="image/*" id="logoFileInput" />
+          </label>
+          <button id="removeLogoBtn">Remove</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Site-wide font</h3>
+        <div class="row">
+          <label for="fontFamily">Font family</label>
+          <select id="fontFamily">
+            <option value="">Default</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="'Courier New', monospace">Courier New</option>
+            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div class="row" id="customFontRow" style="display:none">
+          <label for="customFontInput">Custom font name</label>
+          <input type="text" id="customFontInput" placeholder="e.g. Poppins, sans-serif" />
+        </div>
+        <div class="row">
+          <label for="fontColor">Font color</label>
+          <input type="color" id="fontColor" value="#2d3b45" />
+        </div>
+        <div class="row toggles">
+          <button class="toggle-btn" id="boldBtn" data-prop="fontWeight"><b>B</b></button>
+          <button class="toggle-btn" id="italicBtn" data-prop="fontStyle"><i>I</i></button>
+          <button class="toggle-btn" id="underlineBtn" data-prop="textDecoration"><u>U</u></button>
+        </div>
+      </div>
+
+      <p class="hint">These only affect course cards on the dashboard — nothing else on the site.</p>
+
+      <div class="group">
+        <h3>Dashboard course cards</h3>
+        <div class="row">
+          <label for="cardBg">Card background</label>
+          <input type="color" id="cardBg" value="#ffffff" />
+        </div>
+        <div class="row">
+          <label for="opacity">Card opacity</label>
+          <input type="range" id="opacity" min="20" max="100" value="100" />
+          <span class="val" id="opacityVal">100%</span>
+        </div>
+        <div class="row">
+          <label for="cardWidth">Card size</label>
+          <input type="range" id="cardWidth" min="160" max="420" value="262" />
+          <span class="val" id="cardWidthVal">262px</span>
+        </div>
+        <div class="row">
+          <label for="borderWidth">Border width</label>
+          <input type="range" id="borderWidth" min="0" max="10" value="0" />
+          <span class="val" id="borderWidthVal">0px</span>
+        </div>
+        <div class="row">
+          <label for="borderStyle">Border style</label>
+          <select id="borderStyle">
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+            <option value="double">Double</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="borderColor">Border color</label>
+          <input type="color" id="borderColor" value="#c1c7cf" />
+        </div>
+        <div class="row">
+          <label for="borderRadius">Corner radius</label>
+          <input type="range" id="borderRadius" min="0" max="40" value="6" />
+          <span class="val" id="borderRadiusVal">6px</span>
+        </div>
+        <div class="row">
+          <label for="shadowToggle">Drop shadow</label>
+          <input type="checkbox" id="shadowToggle" />
+        </div>
+        <div class="row">
+          <label for="shadowSize">Shadow size</label>
+          <input type="range" id="shadowSize" min="0" max="30" value="8" />
+          <span class="val" id="shadowSizeVal">8px</span>
+        </div>
+        <div class="row">
+          <label for="shadowStrength">Shadow strength</label>
+          <input type="range" id="shadowStrength" min="0" max="80" value="20" />
+          <span class="val" id="shadowStrengthVal">20%</span>
+        </div>
+      </div>
+
+      <button id="resetBtn" class="danger">Reset all styles</button>
+
+      <div class="group" style="border-bottom:none; margin-bottom:0;">
+        <h3>Backup</h3>
+        <p class="hint">Save everything (styles, custom CSS, logo, and course card images) to a file, or load a previously saved file.</p>
+        <div class="row">
+          <button id="exportBtn">Export settings…</button>
+          <label class="upload">Import settings…
+            <input type="file" accept="application/json" id="importFileInput" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= COURSE CARDS TAB ============= -->
+    <section class="tab-panel" id="tab-cards">
+      <p class="hint">Open your Canvas dashboard, then refresh the list below to customize each course card's image.</p>
+      <button id="refreshCourses">Refresh course list</button>
+      <div id="coursesList" class="courses-list"></div>
+    </section>
+
+    <!-- ============= TASK LIST TAB ============= -->
+    <section class="tab-panel" id="tab-tasklist">
+      <div class="group">
+        <h3>Task list</h3>
+        <div class="row toggles">
+          <button class="toggle-btn tl-mode-btn" data-val="off">Off</button>
+          <button class="toggle-btn tl-mode-btn" data-val="default">Canvas Default</button>
+          <button class="toggle-btn tl-mode-btn" data-val="styled">Styled</button>
+        </div>
+      </div>
+
+      <div id="tlSettings">
+        <div class="group">
+          <h3>Progress rings</h3>
+          <div class="row toggles">
+            <button class="toggle-btn tl-ring-btn" data-val="off">Off</button>
+            <button class="toggle-btn tl-ring-btn" data-val="on">On</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Cards shown</h3>
+          <div class="row">
+            <label for="tlCardLimit">Cards to show at first</label>
+            <input type="number" id="tlCardLimit" min="1" max="50" value="4" />
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>Item types</h3>
+          <div class="row"><label for="tlType-assignment">Assignments</label><input type="checkbox" class="tl-type-cb" data-type="assignment" id="tlType-assignment" /></div>
+          <div class="row"><label for="tlType-quiz">Quizzes</label><input type="checkbox" class="tl-type-cb" data-type="quiz" id="tlType-quiz" /></div>
+          <div class="row"><label for="tlType-discussion_topic">Discussions</label><input type="checkbox" class="tl-type-cb" data-type="discussion_topic" id="tlType-discussion_topic" /></div>
+          <div class="row"><label for="tlType-wiki_page">Pages</label><input type="checkbox" class="tl-type-cb" data-type="wiki_page" id="tlType-wiki_page" /></div>
+          <div class="row"><label for="tlType-planner_note">Notes</label><input type="checkbox" class="tl-type-cb" data-type="planner_note" id="tlType-planner_note" /></div>
+          <div class="row"><label for="tlType-announcement">Announcements</label><input type="checkbox" class="tl-type-cb" data-type="announcement" id="tlType-announcement" /></div>
+        </div>
+
+        <div class="group">
+          <h3>Pull tasks from</h3>
+          <div class="row">
+            <label for="tlPeriod">Time period</label>
+            <select id="tlPeriod">
+              <option value="all">None (all tasks)</option>
+              <option value="today">Today</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="row" id="tlWeekModeRow">
+            <label for="tlWeekMode">Week</label>
+            <select id="tlWeekMode">
+              <option value="rolling">Rolling next 7 days</option>
+              <option value="calendar">7 days from start of week</option>
+            </select>
+          </div>
+          <div class="row" id="tlWeekStartRow">
+            <label for="tlWeekStart">Start of the week</label>
+            <select id="tlWeekStart">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+          <div class="row" id="tlMonthModeRow">
+            <label for="tlMonthMode">Month</label>
+            <select id="tlMonthMode">
+              <option value="rolling">Rolling next 30 days</option>
+              <option value="calendar">Start of month to month end</option>
+            </select>
+          </div>
+          <div id="tlCustomRows" style="display:none">
+            <div class="row">
+              <label for="tlCustomStart">Start date</label>
+              <input type="date" id="tlCustomStart" />
+            </div>
+            <div class="row">
+              <label for="tlCustomEnd">End date</label>
+              <input type="date" id="tlCustomEnd" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= CUSTOM CSS TAB ============= -->
+    <section class="tab-panel" id="tab-css">
+      <p class="hint">Add any extra CSS rules — applied directly to your connected Canvas site.</p>
+      <textarea id="customCSS" placeholder=".ic-DashboardCard { /* ... */ }"></textarea>
+      <button id="saveCSS">Save custom CSS</button>
+    </section>
+  </main>
+  </div>
+
+  <script src="popup.js"></script>
+  <script src="tasklist-popup.js"></script>
+</body>
+</html>
