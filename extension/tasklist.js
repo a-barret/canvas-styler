@@ -453,6 +453,42 @@
       d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZone });
   }
 
+  // Whole local calendar days from today until the item's due date.
+  // Negative = overdue. null = no due date.
+  function daysUntil(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    return daysBetween(new Date(), d);
+  }
+
+  function dayHeading(n) {
+    if (n === null) return "No due date";
+    if (n < -1) return `Due ${-n} days ago`;
+    if (n === -1) return "Due yesterday";
+    if (n === 0) return "Due today";
+    if (n === 1) return "Due tomorrow";
+    return `Due in ${n} days`;
+  }
+
+  // Cards arrive sorted by due date, so same-day items are already adjacent.
+  // Emits a subheading each time the day changes.
+  function groupedCardsHTML(items) {
+    let html = "";
+    let lastKey;
+    items.forEach((i) => {
+      const n = daysUntil(i.due);
+      const key = n === null ? "none" : n;
+      if (key !== lastKey) {
+        html += `<div class="csx-tl-day" role="heading" aria-level="3">${esc(dayHeading(n))}</div>`;
+        lastKey = key;
+      }
+      html += cardHTML(i);
+    });
+    return html;
+  }
+
+
   function cardHTML(i) {
     const pts = i.points != null ? `${i.points} pts` : "No points";
     const btn = i.completed
@@ -504,8 +540,8 @@
       list = `<div class="csx-tl-empty">${state.tab === "complete" ? "Nothing completed in this period yet." : "No tasks to complete in this period."}</div>`;
     else {
       const limit = Math.max(1, parseInt(t.cardLimit, 10) || 4);
-      const visible = state.expanded ? shown : shown.slice(0, limit);
-      list = visible.map(cardHTML).join("");
+      const toShow = state.expanded ? shown : shown.slice(0, limit);
+      list = groupedCardsHTML(toShow);
       if (shown.length > limit) {
         list += state.expanded
           ? `<button class="csx-tl-more" data-act="less">Show less</button>`
@@ -641,6 +677,8 @@
 .csx-tl-tab{flex:1;padding:9px 6px;border:none;background:none;font-size:14px;color:#5b6770;border-bottom:3px solid transparent;margin-bottom:-2px}
 .csx-tl-tab.on{color:#2d3b45;font-weight:700;border-bottom-color:#2d3b45}
 .csx-tl-list{display:flex;flex-direction:column;gap:8px}
+.csx-tl-day{margin:10px 0 0;font-size:13px;font-weight:700;letter-spacing:.02em;color:#5b6770}
+.csx-tl-list>.csx-tl-day:first-child{margin-top:0}
 .csx-tl-card{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:var(--csx-card-bg,#fff);border:1px solid #e3e6ea;border-left:6px solid var(--csx-c,#888);border-radius:6px}
 .csx-tl-body{flex:1;min-width:0}
 .csx-tl-title{display:block;font-weight:700;font-size:15px;color:var(--csx-card-fg,#2d3b45);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
